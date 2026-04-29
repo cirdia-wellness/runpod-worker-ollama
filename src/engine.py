@@ -29,7 +29,8 @@ class OllamaEngine:
                 "openai_input": {
                     "model": model,
                     "prompt": job_input.llm_input,
-                    "stream": job_input.stream
+                    "stream": job_input.stream,
+                    "response_format" : job_input.format
                 }
             })
         else:
@@ -39,7 +40,8 @@ class OllamaEngine:
                 "openai_input": {
                     "model": model,
                     "messages": job_input.llm_input,
-                    "stream": job_input.stream
+                    "stream": job_input.stream,
+                    "response_format" : job_input.format
                 }
             })
 
