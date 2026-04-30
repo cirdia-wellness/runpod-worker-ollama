@@ -1,4 +1,4 @@
 runpod
 python-dotenv
-openai
+ollama
 orjson==3.10.14
