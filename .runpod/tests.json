@@ -6,6 +6,33 @@
         "prompt": "Say: Hallo World!"
       },
       "timeout": 120000
+    },
+    {
+      "name" : "tokyo_facts",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Identify the city and population of Tokyo."
+          }
+        ],
+        "format": {
+          "type": "object",
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "population": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "city",
+            "population"
+          ]
+        }
+      },
+      "timeout": 120000
     }
   ],
   "config": {
@@ -14,11 +41,8 @@
     "env": [
       {
         "key": "OLLAMA_MODEL_NAME",
-        "value": "phi3"
+        "value": "mistral:7b"
       }
-    ],
-    "allowedCudaVersions": [
-      "12.8"
     ]
   }
 }
