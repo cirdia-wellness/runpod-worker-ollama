@@ -31,10 +31,10 @@ class OllamaEngine:
 
             if is_chat:
                 options['messages'] = job_input.llm_input
-                response = await ollama.achat(**options)
+                response = await ollama.chat(**options)
             else:
                 options['prompt'] = job_input.llm_input
-                response = await ollama.agenerate(**options)
+                response = await ollama.generate(**options)
 
             if not job_input.stream:
                 yield response
