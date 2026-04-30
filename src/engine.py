@@ -31,10 +31,10 @@ class OllamaEngine:
 
             if is_chat:
                 options['messages'] = job_input.llm_input
-                response = ollama.chat(**options).message.to_dict()
+                response = ollama.chat(**options).message.model_dump()
             else:
                 options['prompt'] = job_input.llm_input
-                response = ollama.generate(**options).to_dict()
+                response = ollama.generate(**options).model_dump()
 
             if not job_input.stream:
                 yield response
