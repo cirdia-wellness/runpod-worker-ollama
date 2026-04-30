@@ -15,8 +15,8 @@ class OllamaEngine:
 
         try:
             if job_input.openai_route == "/v1/models":
-                models = ollama.list()
-                yield {"object": "list", "data": models['models']}
+                model_list = ollama.list().models
+                yield {"object": "list", "data": [model_list.to_dict() for model_list in response.data]}
                 return
 
             is_chat = job_input.openai_route == "/v1/chat/completions" or isinstance(job_input.llm_input, list)
@@ -31,10 +31,10 @@ class OllamaEngine:
 
             if is_chat:
                 options['messages'] = job_input.llm_input
-                response = ollama.chat(**options)
+                response = ollama.chat(**options).message.to_dict()
             else:
                 options['prompt'] = job_input.llm_input
-                response = ollama.generate(**options)
+                response = ollama.generate(**options).to_dict()
 
             if not job_input.stream:
                 yield response
