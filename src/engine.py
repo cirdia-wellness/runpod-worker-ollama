@@ -36,6 +36,9 @@ class OllamaEngine:
 
             if job_input.format:
                 options['format'] = job_input.format
+                
+            if job_input.system:
+                options['system'] = job_input.system
 
             if is_chat:
                 options['messages'] = job_input.llm_input

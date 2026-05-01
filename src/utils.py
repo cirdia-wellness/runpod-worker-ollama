@@ -9,3 +9,4 @@ class JobInput:
         self.model = job.get("model", os.getenv("OLLAMA_MODEL_NAME", "llama3.2:1b"))
         self.format = job.get("format") or job.get("response_format")
         self.pull_if_missing = job.get("pull_if_missing", False)
+        self.system = job.get("system", None)
