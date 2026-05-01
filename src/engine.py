@@ -1,5 +1,4 @@
 import json
-import os
 
 from dotenv import load_dotenv
 import ollama
@@ -10,9 +9,6 @@ class OllamaEngine:
         print("OllamaEngine initialized")
 
     async def generate(self, job_input):
-        # Get model from OLLAMA_MODEL_NAME defauting to llama3.2:1b
-        model = os.getenv("OLLAMA_MODEL_NAME", "llama3.2:1b")
-
         try:
             if job_input.openai_route == "/v1/models":
                 model_list = ollama.list().models
@@ -22,7 +18,7 @@ class OllamaEngine:
             is_chat = job_input.openai_route == "/v1/chat/completions" or isinstance(job_input.llm_input, list)
 
             options = {
-                'model': model,
+                'model': job_input.model,
                 'stream': job_input.stream,
             }
 
