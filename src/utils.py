@@ -10,3 +10,4 @@ class JobInput:
         self.format = job.get("format") or job.get("response_format")
         self.pull_if_missing = job.get("pull_if_missing", False)
         self.system = job.get("system", None)
+        self.options = job.get("options", None)

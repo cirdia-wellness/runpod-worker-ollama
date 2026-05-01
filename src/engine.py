@@ -37,11 +37,15 @@ class OllamaEngine:
             if job_input.format:
                 options['format'] = job_input.format
                 
-            if job_input.system:
-                options['system'] = job_input.system
+            if job_input.options:
+                options['options'] = job_input.options
 
             if is_chat:
                 options['messages'] = job_input.llm_input
+                
+                if job_input.system:
+                    options['system'] = job_input.system
+                
                 response = ollama.chat(**options).message.model_dump()
             else:
                 options['prompt'] = job_input.llm_input
