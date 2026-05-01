@@ -10,6 +10,18 @@ class OllamaEngine:
 
     async def generate(self, job_input):
         try:
+            # Check if requested model is available
+            available_models = ollama.list().models
+            if job_input.model not in available_models:
+                if job_input.pull_if_missing:
+                    try:
+                        print(f"Pulling model {job_input.model}...")
+                        ollama.pull(job_input.model)
+                    except Exception as pull_error:
+                        print(f"Failed to pull model: {pull_error}")
+                        yield {"error": f"Model {job_input.model} not found and pull failed: {str(pull_error)}"}
+                        return
+            
             if job_input.openai_route == "/v1/models":
                 model_list = ollama.list().models
                 yield {"object": "list", "data": [model_list.to_dict() for model_list in response.data]}
