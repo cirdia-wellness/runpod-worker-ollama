@@ -1,0 +1,16 @@
+{
+  "_comment": "Source of truth for the DEV vLLM serverless endpoint (issue #1). The prod twin is created at the prod cutover with name vllm-ministral-prod. All values here are explicit — no console-only settings (infra #13 principle).",
+  "name": "vllm-ministral-dev",
+  "image": "runpod/worker-v1-vllm:stable-cuda12.1.0",
+  "gpu_tier": "24GB (same tier as the retired Ollama endpoint: RTX 3090 / L4 / A5000 class)",
+  "workers_max": 2,
+  "workers_active": 0,
+  "env": {
+    "MODEL_NAME": "mistralai/Ministral-3-8B-Instruct-2512",
+    "MAX_MODEL_LEN": "16384",
+    "GPU_MEMORY_UTILIZATION": "0.95",
+    "HF_TOKEN": "<create at huggingface.co after accepting the model's terms — required to download the weights>"
+  },
+  "_licensing": "Ministral 3 (2512) family is Apache 2.0 — usable commercially. Do NOT substitute Ministral-8B-Instruct-2410: it is Mistral Research License (non-commercial).",
+  "_request_surface": "OpenAI-compatible: https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions with Bearer <RUNPOD_API_KEY>. Supports response_format json_schema (server-enforced structured output — the property the Mistral-API control run validated)."
+}
