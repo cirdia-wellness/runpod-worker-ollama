@@ -12,13 +12,24 @@ Why vLLM and original weights: the previous Ollama-based endpoint served a quant
 
 ## Endpoint definition
 
-The source of truth for every setting is [`vllm/endpoint.dev.json`](vllm/endpoint.dev.json). Prod gets a twin (`vllm-ministral-prod`) at the prod cutover — same file pattern, separate endpoint.
+Source of truth per environment: [`vllm/endpoint.dev.json`](vllm/endpoint.dev.json) and [`vllm/endpoint.prod.json`](vllm/endpoint.prod.json). **They differ deliberately:** prod sets `DISABLE_LOG_REQUESTS=True` (privacy-load-bearing — vLLM would otherwise log full request bodies, i.e. decrypted member data, into RunPod's persistent logs); dev keeps logging on because it carries synthetic test data only. Never copy dev's logging posture to prod.
 
-## Creating the dev endpoint (RunPod console)
+**Keys:** the endpoint is *created* with the account API key; the engine's workers *call* it with a **restricted, endpoint-invocation-only** RunPod key (`LLM_AUTH_TOKEN_WORKER` in the engine deploy) — a compromised ephemeral worker must not hold account control.
+
+## Creating the dev endpoint
+
+Scripted (preferred — reads `endpoint.dev.json`, prints the endpoint id and `LLM_ENDPOINT` URL):
+
+```bash
+export HF_TOKEN=<hugging face read token>   # RUNPOD_API_KEY or LLM_AUTH_TOKEN already exported
+./vllm/create-endpoint.sh
+```
+
+Or by console:
 
 1. **Serverless → New Endpoint → Docker image** → `runpod/worker-v1-vllm:stable-cuda12.1.0`
-2. Name: `vllm-ministral-dev` · GPU: **24GB tier** · Max workers 2, active 0
-3. Environment variables — exactly the `env` block from `vllm/endpoint.dev.json` (the `HF_TOKEN` is a Hugging Face token created after accepting the model's terms on its HF page — needed to download the weights)
+2. Name: `vllm-ministral-dev` · GPU: **24GB tier** · Max workers 2, active 0 · Container disk 60GB
+3. Environment variables — exactly the `env` block from `vllm/endpoint.dev.json`, with `HF_TOKEN` supplied from your secret store (never written into the file)
 4. Deploy. First request triggers the model download (~18GB) — several minutes, once per fresh worker
 
 ## Verifying it works

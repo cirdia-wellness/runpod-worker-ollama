@@ -1,0 +1,19 @@
+{
+  "_comment": "Source of truth for the PROD vLLM serverless endpoint — created at the prod cutover, never before. Values are supplied at creation time; this file is the record of what prod must be.",
+  "name": "vllm-ministral-prod",
+  "image": "runpod/worker-v1-vllm:stable-cuda12.1.0",
+  "gpu_tier": "24GB (RTX 3090 / L4 / A5000 class)",
+  "workers_max": 2,
+  "workers_active": 0,
+  "env": {
+    "MODEL_NAME": "mistralai/Ministral-3-8B-Instruct-2512",
+    "MAX_MODEL_LEN": "16384",
+    "GPU_MEMORY_UTILIZATION": "0.95",
+    "DISABLE_LOG_REQUESTS": "True",
+    "DISABLE_LOG_STATS": "True",
+    "HF_TOKEN": "supplied at creation from the operator's secret store — never written into this file"
+  },
+  "_privacy": "PRIVACY-LOAD-BEARING: DISABLE_LOG_REQUESTS must be True in prod and must never be removed. Without it, vLLM logs every request body — the decrypted member health envelope — into RunPod's persistent log storage, which outlives the ephemeral worker and breaks the PIE guarantee that decrypted data exists only in worker memory for ~5 minutes. Dev (endpoint.dev.json) deliberately keeps logging ON because dev carries synthetic test data only; that choice must never be copied to prod.",
+  "_licensing": "Ministral 3 (2512) family is Apache 2.0 — usable commercially. Do NOT substitute Ministral-8B-Instruct-2410: it is Mistral Research License (non-commercial).",
+  "_request_surface": "OpenAI-compatible: https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions with a Bearer key. Workers use a RESTRICTED endpoint-invocation-only key, never the account key."
+}
