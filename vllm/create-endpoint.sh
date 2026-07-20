@@ -17,14 +17,14 @@ CFG="$(dirname "$0")/endpoint.dev.json"
 NAME=$(jq -r '.name' "$CFG")
 IMAGE=$(jq -r '.image' "$CFG")
 MODEL=$(jq -r '.env.MODEL_NAME' "$CFG")
-MAXLEN=$(jq -r '.env.MAX_MODEL_LEN' "$CFG")
-GPUMEM=$(jq -r '.env.GPU_MEMORY_UTILIZATION' "$CFG")
 
 echo ">>> creating template ${NAME}-template" >&2
-TMPL=$(jq -n --arg name "${NAME}-template" --arg img "$IMAGE" \
-  --arg model "$MODEL" --arg maxlen "$MAXLEN" --arg gpumem "$GPUMEM" --arg hf "$HF_TOKEN" \
+# Pass the config's whole env block so new settings always ride along;
+# HF_TOKEN's placeholder is replaced with the real value from the operator's
+# environment (never stored in the file).
+TMPL=$(jq --arg name "${NAME}-template" --arg img "$IMAGE" --arg hf "$HF_TOKEN" \
   '{name:$name, imageName:$img, isServerless:true, containerDiskInGb:60,
-    env:{MODEL_NAME:$model, MAX_MODEL_LEN:$maxlen, GPU_MEMORY_UTILIZATION:$gpumem, HF_TOKEN:$hf}}' \
+    env:(.env + {HF_TOKEN:$hf})}' "$CFG" \
   | curl -sS -X POST "$API/templates" \
       -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d @-)
 TMPL_ID=$(echo "$TMPL" | jq -r '.id // empty')
@@ -34,7 +34,7 @@ echo ">>> template id: $TMPL_ID" >&2
 echo ">>> creating serverless endpoint ${NAME}" >&2
 EP=$(jq -n --arg name "$NAME" --arg tmpl "$TMPL_ID" \
   '{name:$name, templateId:$tmpl, computeType:"GPU",
-    gpuTypeIds:["NVIDIA GeForce RTX 3090","NVIDIA RTX A5000","NVIDIA L4"],
+    gpuTypeIds:["NVIDIA L4","NVIDIA GeForce RTX 4090","NVIDIA RTX 4000 Ada Generation"],
     gpuCount:1, workersMax:2, workersMin:0}' \
   | curl -sS -X POST "$API/endpoints" \
       -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d @-)

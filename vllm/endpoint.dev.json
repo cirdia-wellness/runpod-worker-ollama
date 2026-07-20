@@ -1,17 +1,18 @@
 {
-  "_comment": "Source of truth for the DEV vLLM serverless endpoint (issue #1). The intended settings live here; secrets and the endpoint id do not. The prod twin is endpoint.prod.json — different privacy posture, read its _privacy note.",
+  "_comment": "Source of truth for the DEV vLLM serverless endpoint (issue #1). The intended settings live here; secrets and the endpoint id do not. The prod twin is endpoint.prod.json \u2014 different privacy posture, read its _privacy note.",
   "name": "vllm-ministral-dev",
-  "image": "runpod/worker-v1-vllm:stable-cuda12.1.0",
-  "gpu_tier": "24GB (same tier as the retired Ollama endpoint: RTX 3090 / L4 / A5000 class)",
+  "image": "runpod/worker-v1-vllm:v2.22.5",
+  "gpu_tier": "24GB Ada-generation or newer (L4 / RTX 4090 / RTX 4000 Ada) \u2014 the model ships FP8; Ampere cards (3090/A5000) hang at first forward pass",
   "workers_max": 2,
   "workers_active": 0,
   "env": {
     "MODEL_NAME": "mistralai/Ministral-3-8B-Instruct-2512",
     "MAX_MODEL_LEN": "16384",
     "GPU_MEMORY_UTILIZATION": "0.95",
-    "HF_TOKEN": "supplied at creation from the operator's environment (create-endpoint.sh reads $HF_TOKEN) — never written into this file"
+    "HF_TOKEN": "supplied at creation from the operator's environment (create-endpoint.sh reads $HF_TOKEN) \u2014 never written into this file",
+    "LIMIT_MM_PER_PROMPT": "image=0"
   },
-  "_privacy": "Dev keeps vLLM request logging ON deliberately — dev carries synthetic test data only and the logs are useful for debugging. PROD MUST NOT copy this: endpoint.prod.json sets DISABLE_LOG_REQUESTS=True (privacy-load-bearing).",
-  "_licensing": "Ministral 3 (2512) family is Apache 2.0 — usable commercially. Do NOT substitute Ministral-8B-Instruct-2410: it is Mistral Research License (non-commercial).",
-  "_request_surface": "OpenAI-compatible: https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions with a Bearer key. Workers use a RESTRICTED endpoint-invocation-only key. Supports response_format json_schema (server-enforced structured output — the property the Mistral-API control run validated)."
+  "_privacy": "Dev keeps vLLM request logging ON deliberately \u2014 dev carries synthetic test data only and the logs are useful for debugging. PROD MUST NOT copy this: endpoint.prod.json sets DISABLE_LOG_REQUESTS=True (privacy-load-bearing).",
+  "_licensing": "Ministral 3 (2512) family is Apache 2.0 \u2014 usable commercially. Do NOT substitute Ministral-8B-Instruct-2410: it is Mistral Research License (non-commercial).",
+  "_request_surface": "OpenAI-compatible: https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions with a Bearer key. Workers use a RESTRICTED endpoint-invocation-only key. Supports response_format json_schema (server-enforced structured output \u2014 the property the Mistral-API control run validated)."
 }

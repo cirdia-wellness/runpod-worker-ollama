@@ -27,7 +27,7 @@ export HF_TOKEN=<hugging face read token>   # RUNPOD_API_KEY or LLM_AUTH_TOKEN a
 
 Or by console:
 
-1. **Serverless → New Endpoint → Docker image** → `runpod/worker-v1-vllm:stable-cuda12.1.0`
+1. **Serverless → New Endpoint → Docker image** → `runpod/worker-v1-vllm:v2.22.5`
 2. Name: `vllm-ministral-dev` · GPU: **24GB tier** · Max workers 2, active 0 · Container disk 60GB
 3. Environment variables — exactly the `env` block from `vllm/endpoint.dev.json`, with `HF_TOKEN` supplied from your secret store (never written into the file)
 4. Deploy. First request triggers the model download (~18GB) — several minutes, once per fresh worker
