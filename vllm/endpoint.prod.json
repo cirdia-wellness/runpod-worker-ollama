@@ -2,19 +2,25 @@
   "_comment": "Source of truth for the PROD vLLM serverless endpoint \u2014 created at the prod cutover, never before. Values are supplied at creation time; this file is the record of what prod must be.",
   "name": "vllm-ministral-prod",
   "image": "runpod/worker-v1-vllm:v2.22.5",
-  "gpu_tier": "24GB Ada-generation or newer (L4 / RTX 4090 / RTX 4000 Ada) \u2014 the model ships FP8; Ampere cards (3090/A5000) hang at first forward pass",
+  "gpu_tier": "ONLY L4 / RTX 4090 / RTX 4000 Ada \u2014 enforce via console GPU checkboxes (REST list gets widened to the whole 24GB tier incl. MIG slices, which OOM on load). Compilation stays ON: the small-RAM hosts it once guarded against are excluded by the GPU pinning, and eager mode measured ~7x slower generation (11 tok/s on RTX 4000 Ada, 2026-07-20).",
   "workers_max": 2,
   "workers_active": 0,
   "env": {
     "MODEL_NAME": "mistralai/Ministral-3-8B-Instruct-2512",
-    "MAX_MODEL_LEN": "16384",
+    "MAX_MODEL_LEN": "32768",
     "GPU_MEMORY_UTILIZATION": "0.95",
     "DISABLE_LOG_REQUESTS": "True",
     "DISABLE_LOG_STATS": "True",
     "HF_TOKEN": "supplied at creation from the operator's secret store \u2014 never written into this file",
-    "LIMIT_MM_PER_PROMPT": "image=0"
+    "LIMIT_MM_PER_PROMPT": "image=0",
+    "STRUCTURED_OUTPUTS_CONFIG": "{\"backend\": \"xgrammar\", \"disable_any_whitespace\": true}"
   },
   "_privacy": "PRIVACY-LOAD-BEARING: DISABLE_LOG_REQUESTS must be True in prod and must never be removed. Without it, vLLM logs every request body \u2014 the decrypted member health envelope \u2014 into RunPod's persistent log storage, which outlives the ephemeral worker and breaks the PIE guarantee that decrypted data exists only in worker memory for ~5 minutes. Dev (endpoint.dev.json) deliberately keeps logging ON because dev carries synthetic test data only; that choice must never be copied to prod.",
   "_licensing": "Ministral 3 (2512) family is Apache 2.0 \u2014 usable commercially. Do NOT substitute Ministral-8B-Instruct-2410: it is Mistral Research License (non-commercial).",
-  "_request_surface": "OpenAI-compatible: https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions with a Bearer key. Workers use a RESTRICTED endpoint-invocation-only key, never the account key."
+  "_request_surface": "OpenAI-compatible: https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions with a Bearer key. Workers use a RESTRICTED endpoint-invocation-only key, never the account key.",
+  "gpu_type_ids": [
+    "NVIDIA L4",
+    "NVIDIA RTX 4000 Ada Generation"
+  ],
+  "container_disk_gb": 60
 }

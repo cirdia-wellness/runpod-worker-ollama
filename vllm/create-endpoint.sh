@@ -19,11 +19,12 @@ IMAGE=$(jq -r '.image' "$CFG")
 MODEL=$(jq -r '.env.MODEL_NAME' "$CFG")
 
 echo ">>> creating template ${NAME}-template" >&2
-# Pass the config's whole env block so new settings always ride along;
-# HF_TOKEN's placeholder is replaced with the real value from the operator's
-# environment (never stored in the file).
-TMPL=$(jq --arg name "${NAME}-template" --arg img "$IMAGE" --arg hf "$HF_TOKEN" \
-  '{name:$name, imageName:$img, isServerless:true, containerDiskInGb:60,
+# Every value comes from the config file — the file is the source of truth
+# (#1). HF_TOKEN's placeholder is replaced from the operator's environment
+# (never stored in the file).
+TMPL=$(jq --arg name "${NAME}-template" --arg hf "$HF_TOKEN" \
+  '{name:$name, imageName:.image, isServerless:true,
+    containerDiskInGb:(.container_disk_gb // 60),
     env:(.env + {HF_TOKEN:$hf})}' "$CFG" \
   | curl -sS -X POST "$API/templates" \
       -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d @-)
@@ -32,14 +33,26 @@ TMPL_ID=$(echo "$TMPL" | jq -r '.id // empty')
 echo ">>> template id: $TMPL_ID" >&2
 
 echo ">>> creating serverless endpoint ${NAME}" >&2
-EP=$(jq -n --arg name "$NAME" --arg tmpl "$TMPL_ID" \
-  '{name:$name, templateId:$tmpl, computeType:"GPU",
-    gpuTypeIds:["NVIDIA L4","NVIDIA GeForce RTX 4090","NVIDIA RTX 4000 Ada Generation"],
-    gpuCount:1, workersMax:2, workersMin:0}' \
+EP=$(jq --arg tmpl "$TMPL_ID" \
+  '{name:.name, templateId:$tmpl, computeType:"GPU",
+    gpuTypeIds:.gpu_type_ids, gpuCount:1,
+    workersMax:(.workers_max // 2), workersMin:(.workers_active // 0)}' "$CFG" \
   | curl -sS -X POST "$API/endpoints" \
       -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d @-)
 EP_ID=$(echo "$EP" | jq -r '.id // empty')
 [ -n "$EP_ID" ] || { echo "endpoint create failed: $EP" >&2; exit 1; }
+
+# Verify what RunPod actually stored — its API has translated explicit card
+# lists into whole GPU tiers before (which is how MIG slices snuck in). Fail
+# loudly on any mismatch instead of discovering it at the first OOM.
+STORED=$(curl -sS "$API/endpoints/$EP_ID" -H "Authorization: Bearer $KEY" | jq -c '.gpuTypeIds | sort')
+WANTED=$(jq -c '.gpu_type_ids | sort' "$CFG")
+if [ "$STORED" != "$WANTED" ]; then
+  echo "ERROR: RunPod stored gpuTypeIds $STORED but config wants $WANTED" >&2
+  echo "       Fix via: curl -X PATCH $API/endpoints/$EP_ID with the exact list, then re-verify." >&2
+  exit 1
+fi
+echo ">>> gpuTypeIds verified: $STORED" >&2
 
 echo ""
 echo "endpoint id:  $EP_ID"
